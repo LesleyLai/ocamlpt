@@ -1,0 +1,3 @@
+(test
+ (name ocamlpt_test)
+ (libraries ocamlpt ounit2))
