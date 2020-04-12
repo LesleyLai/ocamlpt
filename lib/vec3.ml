@@ -36,3 +36,6 @@ let normalize v =
 
 let lerp v1 v2 t =
   (mult v1 (1. -. t)) +| (mult v2 t)
+
+let zero =
+  create 0. 0. 0.

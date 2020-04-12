@@ -8,6 +8,8 @@ let v2 = Vec3.create 2. 4. 5.
 let r = Ray.create v1 (Vec3.create 1. 0. 0.)
 
 let sphere = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
+let sphere2 = Sphere.create (Vec3.create 0. 0. (-3.)) 0.5
+let scene = Scene.create |> Scene.add sphere |> Scene.add sphere2
 
 let tests = "test suite" >::: [
     "Vec3 creating "  >:: (fun _ ->
@@ -101,6 +103,45 @@ let tests = "test suite" >::: [
                            (Vec3.create 0. 0. 0.)
                            (Vec3.create 0. 0. 1.)
                         ) sphere) None
+      );
+
+    "Ray-Scene interscetion: first object" >:: (fun _ ->
+        assert_equal (Scene.hit
+                        (Ray.create
+                           (Vec3.create 0. 0. 0.)
+                           (Vec3.create 0. 0. (-1.))
+                        ) scene)
+          (Some {t=0.5;
+                 p=(Vec3.create 0. 0. (-0.5));
+                 normal=(Vec3.create 0. 0. 1.)})
+      );
+
+    "Ray-Scene interscetion: second object" >:: (fun _ ->
+        assert_equal (Scene.hit
+                        (Ray.create
+                           (Vec3.create 0. 0. (-5.))
+                           (Vec3.create 0. 0. 1.)
+                        ) scene)
+          (Some {t=1.5;
+                 p=(Vec3.create 0. 0. (-3.5));
+                 normal=(Vec3.create 0. 0. (-1.))})
+      );
+
+    "Ray-Scene interscetion: miss" >:: (fun _ ->
+        assert_equal (Scene.hit
+                        (Ray.create
+                           (Vec3.create 0. 2. (-5.))
+                           (Vec3.create 0. 0. 1.)
+                        ) scene)
+          None
+      );
+
+    "or_else None" >:: (fun _ ->
+        assert_equal (Option_ext.or_else ~f:(fun () -> Some 1) None) (Some 1)
+      );
+
+    "or_else Some" >:: (fun _ ->
+        assert_equal (Option_ext.or_else ~f:(fun () -> Some 1) (Some 42)) (Some 42)
       );
 ]
 
