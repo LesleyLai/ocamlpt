@@ -6,4 +6,4 @@ and vertical = Vec3.create 0.0 2.0 0.0
 and origin = Vec3.create 0.0 0.0 0.0
 
 let get_ray u v = Ray.create origin
-    (lower_left_corner +| (mult horizontal u) +| (mult vertical v))
+    (lower_left_corner +| (u *| horizontal) +| (v *| vertical))

@@ -7,8 +7,10 @@ let v2 = Vec3.create 2. 4. 5.
 
 let r = Ray.create v1 (Vec3.create 1. 0. 0.)
 
-let sphere = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
-let sphere2 = Sphere.create (Vec3.create 0. 0. (-3.)) 0.5
+let dummy_mat = Material.Lambertian { albedo = (Vec3.create 0. 0. 0.) }
+
+let sphere = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5 dummy_mat
+let sphere2 = Sphere.create (Vec3.create 0. 0. (-3.)) 0.5 dummy_mat
 let scene = Scene.create |> Scene.add sphere |> Scene.add sphere2
 
 let tests = "test suite" >::: [
@@ -31,7 +33,7 @@ let tests = "test suite" >::: [
       );
 
     "Vec3 * "  >:: (fun _ ->
-        assert_equal (Vec3.mult v1 2.) (Vec3.create 2. 4. 6.)
+        assert_equal (2. *| v1) (Vec3.create 2. 4. 6.)
       );
 
     "Vec3 / "  >:: (fun _ ->
@@ -63,6 +65,23 @@ let tests = "test suite" >::: [
         assert_equal (Vec3.lerp v1 v2 0.5) (Vec3.create 1.5 3. 4.)
       );
 
+    "Vec3 component-wise product" >:: (fun _ ->
+        assert_equal (Vec3.elem_wise_product v1 v2) (Vec3.create 2. 8. 15.)
+      );
+
+    "Vec3 reflect" >:: (fun _ ->
+        assert_equal
+          (Vec3.reflect (Vec3.create 1. 1. 0.) (Vec3.create 0. 1. 0.))
+          (Vec3.create 1. (-1.) 0.)
+      );
+
+    "Vec3 refract" >:: (fun _ ->
+        assert_equal
+          (Vec3.refract (Vec3.create 0. 1. 0.) (Vec3.create 0. 1. 0.) 1.5)
+          (Vec3.create 0. (-1.) 0.)
+          ~printer:Vec3.to_string
+      );
+
     "Ray at" >:: (fun _ ->
         assert_equal (r |> Ray.at 2.) (Vec3.create 3. 2. 3.)
       );
@@ -75,7 +94,9 @@ let tests = "test suite" >::: [
                         ) sphere)
           (Some {t=0.5;
                  p=(Vec3.create 0. 0. (-0.5));
-                 normal=(Vec3.create 0. 0. 1.)})
+                 normal=(Vec3.create 0. 0. 1.);
+                 material=dummy_mat;
+                 face_direction=Material.FrontFace})
       );
 
     "Sphere intersection intersect inside" >:: (fun _ ->
@@ -86,7 +107,9 @@ let tests = "test suite" >::: [
                         ) sphere)
           (Some {t=0.5;
                  p=(Vec3.create 0. 0. (-1.5));
-                 normal=(Vec3.create 0. 0. (-1.))})
+                 normal=(Vec3.create 0. 0. (-1.));
+                 material=dummy_mat;
+                 face_direction=Material.BackFace})
       );
 
     "Sphere intersection out" >:: (fun _ ->
@@ -113,7 +136,10 @@ let tests = "test suite" >::: [
                         ) scene)
           (Some {t=0.5;
                  p=(Vec3.create 0. 0. (-0.5));
-                 normal=(Vec3.create 0. 0. 1.)})
+                 normal=(Vec3.create 0. 0. 1.);
+                 material=dummy_mat;
+                 face_direction=Material.FrontFace
+                })
       );
 
     "Ray-Scene interscetion: second object" >:: (fun _ ->
@@ -124,7 +150,9 @@ let tests = "test suite" >::: [
                         ) scene)
           (Some {t=1.5;
                  p=(Vec3.create 0. 0. (-3.5));
-                 normal=(Vec3.create 0. 0. (-1.))})
+                 normal=(Vec3.create 0. 0. (-1.));
+                 material=dummy_mat;
+                 face_direction=Material.FrontFace})
       );
 
     "Ray-Scene interscetion: miss" >:: (fun _ ->

@@ -6,16 +6,20 @@ open Ocamlpt
 open Vec3
 
 let sphere1 = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
+    (Material.Lambertian { albedo = (Vec3.create 0.1 0.2 0.5) })
 and sphere2 = Sphere.create (Vec3.create 0. (-100.5) (-1.)) 100.
+    (Material.Lambertian { albedo = (Vec3.create 0.8 0.8 0.) })
+let sphere3 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5
+    (Material.Metal { albedo = (Vec3.create 0.8 0.6 0.2); fuzzness = 0.3 })
+and sphere4 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5
+    (Material.Dielectric { ref_index = 1.5 })
 
-let scene = Scene.create |> Scene.add sphere1 |> Scene.add sphere2
+let scene =
+  let open Scene in
+  create
+  |> add sphere1 |> add sphere2
+  |> add sphere3 |> add sphere4
 
-let random_unit_vector () =
-  let open Float in
-  let a = Random.float_range 0. (2. * pi)
-  and z = Random.float_range (-1.) 1. in
-  let r = sqrt(1. - z * z) in
-  Vec3.create (r * cos(a)) (r * sin(a)) z
 
 let to_gamma_space (color: Vec3.t) =
   let open Float in
@@ -30,8 +34,11 @@ let ray_color (r: Ray.t) =
       if depth >= max_depth then
         Vec3.zero
       else
-        let target = hit_record.p +| hit_record.normal +| random_unit_vector() in
-        Vec3.mult (helper (Ray.create hit_record.p (target -| hit_record.p)) (depth + 1)) 0.5
+        begin match Material.scatter r hit_record hit_record.material with
+          | Some { scattered; attenuation } ->
+            Vec3.elem_wise_product (helper scattered (depth + 1)) attenuation
+          | None -> Vec3.zero
+        end
     | None ->
       let unit_direction = r.direction in
       let t = 0.5 *. (unit_direction.y +. 1.0) in
