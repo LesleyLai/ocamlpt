@@ -49,9 +49,17 @@ let color_255_from_float f =
   Float.to_int(255.999 *. f)
 
 let () =
-  let width = 400
-  and height = 200
+  let width = 200
+  and height = 100
   and sample_per_pixel = 100 in
+  let camera =
+    Camera.create
+      ~lookfrom:(Vec3.create (-2.) (2.) 1.)
+      ~lookat:(Vec3.create 0. 0. (-1.))
+      ~vup:(Vec3.create 0. 1. 0.)
+      ~fovy:(Float.pi /. 2.)
+      ~aspect_ratio:(Float.of_int(width) /. Float.of_int(height))
+  in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
   let _ =
@@ -65,7 +73,7 @@ let () =
         |> Sequence.fold ~init:(Vec3.zero) ~f:(fun acc _ ->
             let u = (Float.of_int(i) +. Random.float(1.)) /. Float.of_int(width)
             and v = (Float.of_int(j) +. Random.float(1.)) /. Float.of_int(height) in
-            let r = Camera.get_ray u v in
+            let r = camera |> Camera.get_ray u v in
             ray_color r +| acc
                           ) in
         let color = color_acc /| (Int.to_float sample_per_pixel) |> to_gamma_space in
