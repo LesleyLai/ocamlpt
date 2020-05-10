@@ -52,13 +52,18 @@ let () =
   let width = 200
   and height = 100
   and sample_per_pixel = 100 in
+  let lookfrom = Vec3.create (3.) (3.) 2.
+  and lookat = Vec3.create 0. 0. (-1.)
+  in
   let camera =
     Camera.create
-      ~lookfrom:(Vec3.create (-2.) (2.) 1.)
-      ~lookat:(Vec3.create 0. 0. (-1.))
+      ~lookfrom:lookfrom
+      ~lookat:lookat
       ~vup:(Vec3.create 0. 1. 0.)
       ~fovy:(Float.pi /. 2.)
       ~aspect_ratio:(Float.of_int(width) /. Float.of_int(height))
+      ~aperture:2.
+      ~focus_dist:(Vec3.length (lookfrom -| lookat))
   in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
