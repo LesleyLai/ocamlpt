@@ -107,7 +107,7 @@ let tests = "test suite" >::: [
                         ) sphere)
           (Some {t=0.5;
                  p=(Vec3.create 0. 0. (-1.5));
-                 normal=(Vec3.create 0. 0. (-1.));
+                 normal=(Vec3.create 0. 0. 1.);
                  material=dummy_mat;
                  face_direction=Material.BackFace})
       );

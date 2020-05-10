@@ -22,6 +22,12 @@ let random_unit_vector () =
 
 type scatter_result = { scattered: Ray.t; attenuation: Vec3.t }
 
+let schlick cosine ref_idx =
+  let open Float in
+  let r0 = (1. - ref_idx) / (1. + ref_idx) in
+  let r0 = r0 * r0 in
+  r0 + (1. - r0) * (int_pow (1. - cosine) 5)
+
 let scatter (r: Ray.t) (hit_record: hit_record) =
   let open Float in
   function
@@ -49,13 +55,13 @@ let scatter (r: Ray.t) (hit_record: hit_record) =
     let unit_direction = Vec3.normalize r.direction in
     let cos_theta = min (dot (negate unit_direction) hit_record.normal) 1.0 in
     let sin_theta = sqrt (1.0 - cos_theta * cos_theta) in
-    if etai_over_etat * sin_theta > 1.0 then
-      (* Total internal reflection, must reflect *)
+    if etai_over_etat * sin_theta > 1.0 (* Total internal reflection, must reflect *)
+       || Random.float 1. < schlick cos_theta etai_over_etat
+    then
       let reflected = reflect unit_direction hit_record.normal in
       let scattered = Ray.create hit_record.p reflected in
       Some { scattered; attenuation }
     else
-      (* Can refract *)
       let refracted = refract unit_direction hit_record.normal etai_over_etat in
       let scattered = Ray.create hit_record.p refracted in
       Some { scattered; attenuation }

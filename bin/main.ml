@@ -49,8 +49,8 @@ let color_255_from_float f =
   Float.to_int(255.999 *. f)
 
 let () =
-  let width = 200
-  and height = 100
+  let width = 400
+  and height = 200
   and sample_per_pixel = 100 in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in

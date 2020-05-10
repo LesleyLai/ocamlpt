@@ -1,3 +1,4 @@
+open Base
 open Vec3
 
 type t = {center: Vec3.t; radius: float; material: Material.t}
@@ -6,16 +7,24 @@ let create center radius material =
   {center; radius; material}
 
 let hit (r: Ray.t) ({center; radius; material}: t): Material.hit_record option =
+  let open Float in
   let t_min = 0.00001 in
   let oc = r.origin -| center in
   let a = Vec3.dot r.direction r.direction
   and half_b = Vec3.dot oc r.direction
   and c = (Vec3.dot oc oc) -. radius *. radius in
 
+
   let hit_record_from_t t face_direction: Material.hit_record option =
     if (t > t_min) then
       let p = Ray.at t r in
-      Some {t; p; normal = ((p -| center) /| radius); material; face_direction}
+      let outward_normal = ((p -| center) /| radius) in
+      let normal =
+        match face_direction with
+        | Material.FrontFace -> outward_normal
+        | Material.BackFace -> (negate outward_normal)
+      in
+      Some {t; p; normal; material; face_direction}
     else
       None
   in
