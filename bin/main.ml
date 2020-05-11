@@ -5,21 +5,53 @@ open Ocamlpt
 
 open Vec3
 
-let sphere1 = Sphere.create (Vec3.create 0. 0. (-1.)) 0.5
-    (Material.Lambertian { albedo = (Vec3.create 0.1 0.2 0.5) })
-and sphere2 = Sphere.create (Vec3.create 0. (-100.5) (-1.)) 100.
-    (Material.Lambertian { albedo = (Vec3.create 0.8 0.8 0.) })
-let sphere3 = Sphere.create (Vec3.create 1. 0. (-1.)) 0.5
-    (Material.Metal { albedo = (Vec3.create 0.8 0.6 0.2); fuzzness = 0.3 })
-and sphere4 = Sphere.create (Vec3.create (-1.) 0. (-1.)) 0.5
-    (Material.Dielectric { ref_index = 1.5 })
+let random_vec () =
+  Vec3.create (Random.float 1.) (Random.float 1.) (Random.float 1.)
 
 let scene =
+  let open Float in
   let open Scene in
-  create
-  |> add sphere1 |> add sphere2
-  |> add sphere3 |> add sphere4
-
+  let sphere1 = Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
+      (Material.Lambertian { albedo = (Vec3.create 0.5 0.5 0.5) })
+  and sphere2 = Sphere.create (Vec3.create 0. 1. 0.) 1.
+      (Material.Dielectric { ref_index = 1.5 })
+  and sphere3 = Sphere.create (Vec3.create (-4.) 1. 0.) 1.0
+      (Material.Lambertian { albedo = (Vec3.create 0.4 0.2 0.1) })
+  and sphere4 = Sphere.create (Vec3.create 4. 1. 0.) 1.0
+      (Material.Metal { albedo = (Vec3.create 0.7 0.6 0.5); fuzzness = 0.0 }) in
+  (Sequence.cartesian_product
+     (Sequence.range (-11) 11)
+     (Sequence.range (-11) 11)
+  )|> Sequence.fold
+    ~init:(create
+           |> add sphere1 |> add sphere2
+           |> add sphere3 |> add sphere4)
+    ~f:(fun acc (b, a) ->
+        let choose_mat = Random.float 1. in
+        let center = Vec3.create
+            (Int.to_float(a) +. 0.9 *. (Random.float 1.))
+            0.2
+            (Int.to_float(b) +. 0.9 *. (Random.float 1.)) in
+        if ((Vec3.length (center -| (Vec3.create 4. 0.2 0.0))) > 0.9) then
+          if choose_mat < 0.8 then
+            let albedo =
+              Vec3.elem_wise_product (random_vec()) (random_vec()) in
+            acc |> add
+              (Sphere.create center 0.2 (Material.Lambertian { albedo }))
+          else if choose_mat < 0.95 then
+            let albedo = Vec3.create
+                (Random.float_range 0.5 1.)
+                (Random.float_range 0.5 1.)
+                (Random.float_range 0.5 1.) in
+            let fuzzness = Random.float_range 0. 0.5 in
+            acc |> add
+              (Sphere.create center 0.2 (Material.Metal { albedo; fuzzness }))
+          else
+            acc |> add
+              (Sphere.create center 0.2 (Material.Dielectric { ref_index = 1.5 }))
+        else
+          acc
+      )
 
 let to_gamma_space (color: Vec3.t) =
   let open Float in
@@ -49,11 +81,11 @@ let color_255_from_float f =
   Float.to_int(255.999 *. f)
 
 let () =
-  let width = 200
-  and height = 100
+  let width = 1920
+  and height = 1080
   and sample_per_pixel = 100 in
-  let lookfrom = Vec3.create (3.) (3.) 2.
-  and lookat = Vec3.create 0. 0. (-1.)
+  let lookfrom = Vec3.create 13. 2. 3.
+  and lookat = Vec3.create 0. 0. 0.
   in
   let camera =
     Camera.create
@@ -62,8 +94,8 @@ let () =
       ~vup:(Vec3.create 0. 1. 0.)
       ~fovy:(Float.pi /. 2.)
       ~aspect_ratio:(Float.of_int(width) /. Float.of_int(height))
-      ~aperture:2.
-      ~focus_dist:(Vec3.length (lookfrom -| lookat))
+      ~aperture:0.1
+      ~focus_dist:10.
   in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
