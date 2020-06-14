@@ -33,13 +33,13 @@ let scatter (r: Ray.t) (hit_record: hit_record) =
   function
   | Lambertian { albedo } ->
     let scatter_direction = hit_record.normal +| random_unit_vector() in
-    let scattered = Ray.create hit_record.p scatter_direction
+    let scattered = Ray.create hit_record.p scatter_direction r.time
     and attenuation = albedo in
     Some { scattered; attenuation }
 
   | Metal { albedo; fuzzness } ->
     let reflected = reflect (normalize r.direction) hit_record.normal in
-    let scattered = Ray.create hit_record.p (reflected +| fuzzness *| random_unit_vector())
+    let scattered = Ray.create hit_record.p (reflected +| fuzzness *| random_unit_vector()) r.time
     and attenuation = albedo in
     Option.some_if ((Vec3.dot scattered.direction hit_record.normal) > 0.)
       { scattered; attenuation }
@@ -59,9 +59,9 @@ let scatter (r: Ray.t) (hit_record: hit_record) =
        || Random.float 1. < schlick cos_theta etai_over_etat
     then
       let reflected = reflect unit_direction hit_record.normal in
-      let scattered = Ray.create hit_record.p reflected in
+      let scattered = Ray.create hit_record.p reflected r.time in
       Some { scattered; attenuation }
     else
       let refracted = refract unit_direction hit_record.normal etai_over_etat in
-      let scattered = Ray.create hit_record.p refracted in
+      let scattered = Ray.create hit_record.p refracted r.time in
       Some { scattered; attenuation }

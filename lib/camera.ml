@@ -10,6 +10,8 @@ type t = {
   u: Vec3.t;
   v: Vec3.t;
   lens_radius: float;
+  time0: float;
+  time1: float;
 }
 
 let rec random_in_unit_disk () =
@@ -21,9 +23,11 @@ let rec random_in_unit_disk () =
     p
 
 let create
+  ?time0:(time0 = 0.) ?time1:(time1 = 0.)
     ~lookfrom ~lookat ~vup
     ~fovy ~aspect_ratio
     ~aperture ~focus_dist
+    ()
   : t =
   let open Float in
   let origin = lookfrom in
@@ -42,7 +46,7 @@ let create
   and horizontal = (2. * half_width * focus_dist *| u)
   and vertical = (2. * half_height * focus_dist *| v)
   in
-  { lower_left_corner; horizontal; vertical; origin; w; u; v; lens_radius }
+  { lower_left_corner; horizontal; vertical; origin; w; u; v; lens_radius; time0; time1 }
 
 
 let get_ray u v camera =
@@ -53,3 +57,4 @@ let get_ray u v camera =
      (u *| camera.horizontal) +|
      (v *| camera.vertical) -|
      camera.origin -| offset)
+    (Random.float_range camera.time0 camera.time1)
