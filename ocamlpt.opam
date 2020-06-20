@@ -1,0 +1,19 @@
+opam-version: "2.0"
+name: "ocamlpt"
+version: "0.1"
+synopsis: "A path tracer live-coded in Youtube stream"
+description: """
+It is based on Peter Shirley's fantastic book Ray Tracing in a Weekend.
+"""
+maintainer: "Lesley Lai <lesley@lesleylai.info>"
+authors: "Lesley Lai <lesley@lesleylai.info>"
+license: "MIT"
+homepage: "https://github.com/LesleyLai/ocamlpt"
+bug-reports: "https://github.com/LesleyLai/ocamlpt/issues"
+dev-repo: "git+https://github.com/LesleyLai/ocamlpt.git"
+depends: [ "ocaml" "ocamlfind" "ounit2" "base" "stdio" ]
+build: [
+  ["./configure" "--prefix=%{prefix}%"]
+  [make]
+]
+install: [make "install"]
