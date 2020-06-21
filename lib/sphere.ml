@@ -14,7 +14,6 @@ let hit (r: Ray.t) ({center; radius; material}: t): Material.hit_record option =
   and half_b = Vec3.dot oc r.direction
   and c = (Vec3.dot oc oc) -. radius *. radius in
 
-
   let hit_record_from_t t face_direction: Material.hit_record option =
     if (t > t_min) then
       let p = Ray.at t r in
@@ -40,3 +39,8 @@ let hit (r: Ray.t) ({center; radius; material}: t): Material.hit_record option =
         hit_record_from_t t2 Material.BackFace)
   else
     None
+
+let bounding_box (sphere: t): Aabb.t =
+  let open Vec3 in
+  let r = (Vec3.create sphere.radius sphere.radius sphere.radius) in
+  {min=sphere.center -| r; max=sphere.center +| r}

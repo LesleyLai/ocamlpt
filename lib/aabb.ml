@@ -28,3 +28,17 @@ let hit (r: Ray.t) (tmin: float) (tmax: float) (aabb: t) =
     | None -> false
     | Some (tmin2, tmax2) ->
       Option.is_some (helper (fun pt -> pt.z) tmin2 tmax2)
+
+let union (aabb0: t) (aabb1: t) =
+  let small =
+    Vec3.create
+      (Float.min aabb0.min.x aabb1.min.x)
+      (Float.min aabb0.min.y aabb1.min.y)
+      (Float.min aabb0.min.z aabb1.min.z)
+  and big =
+    Vec3.create
+      (Float.max aabb0.max.x aabb1.max.x)
+      (Float.max aabb0.max.y aabb1.max.y)
+      (Float.max aabb0.max.z aabb1.max.z)
+  in
+  {min=small; max=big}

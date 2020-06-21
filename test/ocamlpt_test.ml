@@ -9,6 +9,11 @@ let aabb = Aabb.create
     (Vec3.create (-1.) (-1.) (-1.))
     (Vec3.create 1. 1. 1.)
 
+let aabb2 = Aabb.create
+    (Vec3.create (-2.) (-2.) (-2.))
+    (Vec3.create 0. 0. 0.)
+
+
 let r = Ray.create v1 (Vec3.create 1. 0. 0.) 0.
 
 let dummy_mat = Material.Lambertian { albedo = (Vec3.create 0. 0. 0.) }
@@ -18,6 +23,14 @@ let sphere2 = Sphere.create (Vec3.create 0. 0. (-3.)) 0.5 dummy_mat
 
 let moving_sphere = Moving_sphere.create
     (Vec3.create 0. 0. (-1.))
+    (Vec3.create 0. 0. (1.))
+    0.
+    1.
+    0.5
+    dummy_mat
+
+let moving_sphere2 = Moving_sphere.create
+    (Vec3.create 1. 0. (-1.))
     (Vec3.create 0. 0. (1.))
     0.
     1.
@@ -147,6 +160,13 @@ let tests = "test suite" >::: [
                         ) sphere) None
       );
 
+    "Sphere bounding box" >:: (fun _ ->
+        assert_equal (Sphere.bounding_box sphere)
+          (Aabb.create
+             (Vec3.create (-0.5) (-0.5) (-1.5))
+             (Vec3.create (0.5) (0.5) (-0.5)))
+      );
+
     "Ray-Scene interscetion: first object" >:: (fun _ ->
         assert_equal (Scene.hit
                         (Ray.create
@@ -242,6 +262,13 @@ let tests = "test suite" >::: [
                         ) moving_sphere) None
       );
 
+    "Moving Sphere bounding box" >:: (fun _ ->
+        assert_equal (Moving_sphere.bounding_box moving_sphere2)
+          (Aabb.create
+             (Vec3.create (-0.5) (-0.5) (-1.5))
+             (Vec3.create (1.5) (0.5) (1.5)))
+      );
+
     "Ray-Scene interscetion: first object" >:: (fun _ ->
         assert_equal (Scene.hit
                         (Ray.create
@@ -312,6 +339,13 @@ let tests = "test suite" >::: [
           (Aabb.hit
              (Ray.create (Vec3.create 2. 2. 0.) (Vec3.create (-1.) (-1.) (-1.)) 0.)
              0. Float.max_float aabb) false);
+
+    "AABB union" >:: (fun _ ->
+        assert_equal
+          (Aabb.union aabb aabb2)
+          (Aabb.create
+             (Vec3.create (-2.) (-2.) (-2.))
+             (Vec3.create 1. 1. 1.)));
 ]
 
 let _ = run_test_tt_main tests

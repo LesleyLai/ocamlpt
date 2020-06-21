@@ -3,6 +3,7 @@ open Base
 module type Shape = sig
   type t
   val hit: Ray.t -> t -> Material.hit_record option
+  val bounding_box: t -> Aabb.t
 end
 
 module type Shape_instance = sig
