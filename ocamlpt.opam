@@ -11,7 +11,7 @@ license: "MIT"
 homepage: "https://github.com/LesleyLai/ocamlpt"
 bug-reports: "https://github.com/LesleyLai/ocamlpt/issues"
 dev-repo: "git+https://github.com/LesleyLai/ocamlpt.git"
-depends: [ "ocaml" "ocamlfind" "ounit2" "base" "stdio" ]
+depends: [ "ocaml" "ocamlfind" "ounit2" "base" "stdio" "core" ]
 build: [
   ["./configure" "--prefix=%{prefix}%"]
   [make]

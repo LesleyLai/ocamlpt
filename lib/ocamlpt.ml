@@ -6,3 +6,4 @@ module Scene = Scene
 module Option_ext = Option_ext
 module Camera = Camera
 module Material = Material
+module Aabb = Aabb

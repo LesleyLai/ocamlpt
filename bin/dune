@@ -1,4 +1,4 @@
 (executable
  (public_name ocamlpt)
  (name main)
- (libraries ocamlpt))
+ (libraries ocamlpt core))

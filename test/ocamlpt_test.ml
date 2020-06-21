@@ -5,6 +5,10 @@ open Ocamlpt.Vec3
 let v1 = Vec3.create 1. 2. 3.
 let v2 = Vec3.create 2. 4. 5.
 
+let aabb = Aabb.create
+    (Vec3.create (-1.) (-1.) (-1.))
+    (Vec3.create 1. 1. 1.)
+
 let r = Ray.create v1 (Vec3.create 1. 0. 0.) 0.
 
 let dummy_mat = Material.Lambertian { albedo = (Vec3.create 0. 0. 0.) }
@@ -284,6 +288,30 @@ let tests = "test suite" >::: [
     "or_else Some" >:: (fun _ ->
         assert_equal (Option_ext.or_else ~f:(fun () -> Some 1) (Some 42)) (Some 42)
       );
+
+    "AABB hit" >:: (fun _ ->
+        assert_equal
+          (Aabb.hit
+             (Ray.create (Vec3.create 2. 2. 2.) (Vec3.create (-1.) (-1.) (-1.)) 0.)
+             0. Float.max_float aabb) true);
+
+    "AABB not hit 1" >:: (fun _ ->
+        assert_equal
+          (Aabb.hit
+             (Ray.create (Vec3.create 0. 2. 2.) (Vec3.create (-1.) (-1.) (-1.)) 0.)
+             0. Float.max_float aabb) false);
+
+    "AABB not hit 2" >:: (fun _ ->
+        assert_equal
+          (Aabb.hit
+             (Ray.create (Vec3.create 2. 0. 2.) (Vec3.create (-1.) (-1.) (-1.)) 0.)
+             0. Float.max_float aabb) false);
+
+    "AABB not hit 3" >:: (fun _ ->
+        assert_equal
+          (Aabb.hit
+             (Ray.create (Vec3.create 2. 2. 0.) (Vec3.create (-1.) (-1.) (-1.)) 0.)
+             0. Float.max_float aabb) false);
 ]
 
 let _ = run_test_tt_main tests

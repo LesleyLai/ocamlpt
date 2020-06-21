@@ -1,4 +1,4 @@
-open Base
+open Core
 open Stdio
 
 open Ocamlpt
@@ -103,6 +103,7 @@ let () =
   in
   let file = Out_channel.create "image.ppm" in
   let _ = Out_channel.fprintf file "P3\n%d %d\n255\n" width height in
+  let starting_time = Unix.gettimeofday () in
   let _ =
   (Sequence.cartesian_product
      (Sequence.range ~stride:(-1) ~stop:`inclusive (height-1) 0)
@@ -122,4 +123,4 @@ let () =
         and ig = color_255_from_float (Float.clamp_exn color.y ~min:0.0 ~max:1.0)
         and ib = color_255_from_float (Float.clamp_exn color.z ~min:0.0 ~max:1.0) in
         Out_channel.fprintf file "%d %d %d\n" ir ig ib) in
-  printf "Done\n"
+  printf "Execution time: %fs\n" ((Unix.gettimeofday()) -. starting_time)
