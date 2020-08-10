@@ -10,7 +10,7 @@ let random_vec () =
 
 let scene =
   let open Float in
-  let open Scene in
+  let open Scene.Builder in
   let sphere1 = Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
       (Material.Lambertian { albedo = (Vec3.create 0.5 0.5 0.5) })
   and sphere2 = Sphere.create (Vec3.create 0. 1. 0.) 1.
@@ -53,6 +53,7 @@ let scene =
         else
           acc
       )
+  |> build
 
 let to_gamma_space (color: Vec3.t) =
   let open Float in

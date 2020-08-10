@@ -37,9 +37,12 @@ let moving_sphere2 = Moving_sphere.create
     0.5
     dummy_mat
 
-let scene = Scene.create
-            |> Scene.add (module Sphere) sphere
-            |> Scene.add  (module Sphere) sphere2
+let scene =
+  let open Scene.Builder in
+  create
+  |> add (module Sphere) sphere
+  |> add (module Sphere) sphere2
+  |> build
 
 let tests = "test suite" >::: [
     "Vec3 creating "  >:: (fun _ ->
