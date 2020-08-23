@@ -1,4 +1,4 @@
 (library
  (name ocamlpt)
- (libraries base stdio)
+ (libraries base stdio camlimages)
 )

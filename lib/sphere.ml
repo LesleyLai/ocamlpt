@@ -6,6 +6,23 @@ type t = {center: Vec3.t; radius: float; material: Material.t}
 let create center radius material =
   {center; radius; material}
 
+(*
+void get_sphere_uv(const vec3& p, double& u, double& v) {
+    auto phi = atan2(p.z(), p.x());
+    auto theta = asin(p.y());
+    u = 1-(phi + pi) / (2*pi);
+    v = (theta + pi/2) / pi;
+}
+*)
+
+let get_sphere_uv (p: Vec3.t) =
+  let open Float in
+  let phi = atan2 p.z p.x
+  and theta = asin p.y in
+  let u = 1. - (phi + pi) / (2. * pi)
+  and v = (theta + pi/2.) / pi in
+  (u, v)
+
 let hit (r: Ray.t) ({center; radius; material}: t): Material.hit_record option =
   let open Float in
   let t_min = 0.00001 in
@@ -23,7 +40,8 @@ let hit (r: Ray.t) ({center; radius; material}: t): Material.hit_record option =
         | Material.FrontFace -> outward_normal
         | Material.BackFace -> (negate outward_normal)
       in
-      Some {t; p; normal; material; face_direction}
+      let (u, v) = get_sphere_uv p in
+      Some {t; p; normal; material; u; v; face_direction}
     else
       None
   in

@@ -8,15 +8,20 @@ open Vec3
 let random_vec () =
   Vec3.create (Random.float 1.) (Random.float 1.) (Random.float 1.)
 
-let scene =
+let random_scene =
   let open Float in
   let open Scene.Builder in
+  let checker =
+    Texture.checker
+      (Texture.solid_color (Vec3.create 0.2 0.3 0.1))
+      (Texture.solid_color (Vec3.create 0.9 0.9 0.9))
+  in
   let sphere1 = Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
-      (Material.Lambertian { albedo = (Vec3.create 0.5 0.5 0.5) })
+      (Material.Lambertian { albedo = checker })
   and sphere2 = Sphere.create (Vec3.create 0. 1. 0.) 1.
       (Material.Dielectric { ref_index = 1.5 })
   and sphere3 = Sphere.create (Vec3.create (-4.) 1. 0.) 1.0
-      (Material.Lambertian { albedo = (Vec3.create 0.4 0.2 0.1) })
+      (Material.Lambertian { albedo = (Texture.solid_color (Vec3.create 0.4 0.2 0.1)) })
   and sphere4 = Sphere.create (Vec3.create 4. 1. 0.) 1.0
       (Material.Metal { albedo = (Vec3.create 0.7 0.6 0.5); fuzzness = 0.0 }) in
   (Sequence.cartesian_product
@@ -37,7 +42,7 @@ let scene =
             let albedo =
               Vec3.elem_wise_product (random_vec()) (random_vec()) in
             acc |> add (module Sphere)
-              (Sphere.create center 0.2 (Material.Lambertian { albedo }))
+              (Sphere.create center 0.2 (Material.Lambertian { albedo=(Texture.solid_color albedo) }))
           else if choose_mat < 0.95 then
             let albedo = Vec3.create
                 (Random.float_range 0.5 1.)
@@ -55,12 +60,39 @@ let scene =
       )
   |> build
 
+let two_spheres =
+  let open Scene.Builder in
+  let checker =
+    Texture.checker
+      (Texture.solid_color (Vec3.create 0.2 0.3 0.1))
+      (Texture.solid_color (Vec3.create 0.9 0.9 0.9))
+  in
+  create
+  |> add (module Sphere)
+    (Sphere.create (Vec3.create 0. (-10.) 0.) 10.
+       (Material.Lambertian {albedo=checker}))
+  |> add (module Sphere)
+    (Sphere.create (Vec3.create 0. (10.) 0.) 10.
+       (Material.Lambertian {albedo=checker}))
+  |> build
+
+let two_perlin_spheres =
+  let open Scene.Builder in
+  create
+  |> add (module Sphere)
+    (Sphere.create (Vec3.create 0. (-1000.) 0.) 1000.
+       (Material.Lambertian {albedo=Texture.noise}))
+  |> add (module Sphere)
+    (Sphere.create (Vec3.create 0. (2.) 0.) 2.
+       (Material.Lambertian {albedo=Texture.noise}))
+  |> build
+
 let to_gamma_space (color: Vec3.t) =
   let open Float in
   let gamma_inv = 1. / 2.2 in
   Vec3.create (color.x ** gamma_inv) (color.y ** gamma_inv) (color.z ** gamma_inv)
 
-let ray_color (r: Ray.t) =
+let ray_color (scene: Scene.t) (r: Ray.t) =
   let max_depth = 50 in
   let rec helper r depth =
     match Scene.hit r scene with
@@ -86,8 +118,14 @@ let () =
   let width = 200
   and height = 100
   and sample_per_pixel = 100 in
-  let lookfrom = Vec3.create 13. 2. 3.
-  and lookat = Vec3.create 0. 0. 0.
+  let scene_id = 2 in
+  let (scene, lookfrom, lookat, fovy, aperture) =
+    if scene_id = 0 then
+      (random_scene, Vec3.create 13. 2. 3., Vec3.create 0. 0. 0., Float.pi /. 2., 0.1)
+    else if scene_id = 1 then
+      (two_spheres, Vec3.create 13. 2. 3., Vec3.create 0. 0. 0., Float.pi /. 2., 0.0)
+    else
+      (two_perlin_spheres, Vec3.create 13. 2. 3., Vec3.create 0. 0. 0., Float.pi /. 2., 0.0)
   in
   let camera =
     Camera.create
@@ -96,9 +134,9 @@ let () =
       ~lookfrom:lookfrom
       ~lookat:lookat
       ~vup:(Vec3.create 0. 1. 0.)
-      ~fovy:(Float.pi /. 2.)
+      ~fovy:fovy
       ~aspect_ratio:(Float.of_int(width) /. Float.of_int(height))
-      ~aperture:0.1
+      ~aperture:aperture
       ~focus_dist:10.
       ()
   in
@@ -117,7 +155,7 @@ let () =
             let u = (Float.of_int(i) +. Random.float(1.)) /. Float.of_int(width)
             and v = (Float.of_int(j) +. Random.float(1.)) /. Float.of_int(height) in
             let r = camera |> Camera.get_ray u v in
-            ray_color r +| acc
+            ray_color scene r +| acc
                           ) in
         let color = color_acc /| (Int.to_float sample_per_pixel) |> to_gamma_space in
         let ir = color_255_from_float (Float.clamp_exn color.x ~min:0.0 ~max:1.0)

@@ -2,7 +2,7 @@ open Base
 open Vec3
 
 type t =
-  | Lambertian of { albedo: Vec3.t }
+  | Lambertian of { albedo: Texture.t }
   | Metal of { albedo: Vec3.t; fuzzness: float }
   | Dielectric of { ref_index: float }
 
@@ -10,7 +10,12 @@ type face_direction =
   | FrontFace
   | BackFace
 
-type hit_record = {t: float; p: Vec3.t; normal: Vec3.t; material: t;
+type hit_record = {t: float;
+                   p: Vec3.t;
+                   normal: Vec3.t;
+                   material: t;
+                   u: float;
+                   v: float;
                    face_direction: face_direction}
 
 let random_unit_vector () =
@@ -34,7 +39,7 @@ let scatter (r: Ray.t) (hit_record: hit_record) =
   | Lambertian { albedo } ->
     let scatter_direction = hit_record.normal +| random_unit_vector() in
     let scattered = Ray.create hit_record.p scatter_direction r.time
-    and attenuation = albedo in
+    and attenuation = albedo ~u:hit_record.u ~v:hit_record.v ~p:hit_record.p in
     Some { scattered; attenuation }
 
   | Metal { albedo; fuzzness } ->
